@@ -11,10 +11,16 @@ const cors = require('cors');
 // Automatically allow cross-origin requests
 app.use(cors({ origin: true }));
 
+const { createBuyOrder } = require('./create_buy_order')
 
-app.post("/api/fake", (req, res) => {
+
+app.post("/api/orders/buy/create", (req, res) => {
   console.log(req.body)
-  res.json({ message: "Call received!" });
+  createBuyOrder(req, res).then((response) => {
+    if (response) {
+      res.json(response);
+    }
+  });
 });
 
 app.listen(PORT, () => {
