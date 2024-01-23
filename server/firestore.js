@@ -22,7 +22,7 @@ async function createBuyOrderController(buy_amount) {
   // This feature ensures that the transaction runs on up-to-date and consistent data.
   await db.runTransaction(async (t) => {
     // get an open order that satisfy the buy_amount
-    const sellOrders= await t.get(sellOrdersRef.where('amount', '>=', buy_amount).where('state', '==', 'open').limit(1));
+    const sellOrders= await t.get(sellOrdersRef.where('balance', '>=', buy_amount).limit(1));
 
     if (sellOrders._size == 0) {
       console.log('No sell orders satisfy.');
@@ -34,7 +34,13 @@ async function createBuyOrderController(buy_amount) {
 
     // update the sell order, mark the state from open to pending, add a reserved amount field
     const sellOrderRef = sellOrdersRef.doc(sell_order_id)
-    t.update(sellOrderRef, {'state': 'pending', 'pending_amount': buy_amount})
+    console.log(sellOrder.data()['balance'])
+    t.update(
+      sellOrderRef, 
+      {
+        'balance': sellOrder.data()['balance'] - buy_amount, 
+      }
+    )
   });
 
   // exit if cannot find qualified orders
@@ -50,7 +56,7 @@ async function createBuyOrderController(buy_amount) {
     state: 'reserved',
   }
   await db.collection('buy_orders').doc(buy_order_id).set(buy_order);
-
+  return buy_order_id;
 }
 
 
