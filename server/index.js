@@ -12,11 +12,21 @@ const cors = require('cors');
 app.use(cors({ origin: true }));
 
 const { createBuyOrder } = require('./create_buy_order')
+const { verifyBuyOrder } = require('./verify_buy_order')
 
 
 app.post("/api/orders/buy/create", (req, res) => {
   console.log(req.body)
   createBuyOrder(req, res).then((response) => {
+    if (response) {
+      res.json(response);
+    }
+  });
+});
+
+app.post("/api/orders/buy/verify", (req, res) => {
+  console.log(req.body)
+  verifyBuyOrder(req, res).then((response) => {
     if (response) {
       res.json(response);
     }

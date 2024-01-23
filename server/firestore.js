@@ -13,7 +13,6 @@ const uuid = require('uuid4');
 
 async function createBuyOrderController(buy_amount) {
   const sellOrdersRef = db.collection('sell_orders')
-  const buyOrderRef = db.collection('buy_orders')
   var sell_order_id = 0
 
   // In the case of a concurrent edit, Cloud Firestore runs the entire transaction again. 
@@ -53,12 +52,21 @@ async function createBuyOrderController(buy_amount) {
   const buy_order = {
     amount: buy_amount,
     sell_order_id: sell_order_id,
-    state: 'reserved',
+    state: 'pending',
   }
   await db.collection('buy_orders').doc(buy_order_id).set(buy_order);
   return buy_order_id;
 }
 
 
+async function commitBuyOrderController(buy_order_id) {
+  const buyOrdersRef = db.collection('buy_orders')
+  const buyOrderRef = await buyOrdersRef.doc(buy_order_id)
+  await buyOrderRef.set({
+    state: 'complete'
+  }, { merge: true });
+}
 
-module.exports = { createBuyOrderController };
+
+
+module.exports = { createBuyOrderController, commitBuyOrderController };
