@@ -13,9 +13,16 @@ async function verifyBuyOrder (req, res) {
 
   // if verfication passed
   // mark the buy order state from pending to complete
-  await commitBuyOrderController(buy_order_id)
-  return {
-    'success': true
+  const result = await commitBuyOrderController(buy_order_id) 
+
+  if (typeof result == 'undefined') {
+    return {
+      'success': false
+    }
+  } else {
+    return {
+      'success': true
+    }
   }
   
 }

@@ -62,11 +62,53 @@ async function createBuyOrderController(buy_amount) {
 async function commitBuyOrderController(buy_order_id) {
   const buyOrdersRef = db.collection('buy_orders')
   const buyOrderRef = await buyOrdersRef.doc(buy_order_id)
+  const buyOrder = await buyOrderRef.get()
+
+
+  if (buyOrder.data()['state'] != 'pending') {
+    return
+  }
+
   await buyOrderRef.set({
-    state: 'complete'
+    state: 'completed'
   }, { merge: true });
+
+  return buy_order_id;
+}
+
+async function cencelBuyOrderController(buy_order_id) {
+  const buyOrdersRef = db.collection('buy_orders')
+  const buyOrderRef = buyOrdersRef.doc(buy_order_id)
+  const buyOrder = await buyOrderRef.get()
+
+  console.log(buyOrder.data())
+
+  if (buyOrder.data()['state'] != 'pending') {
+    return
+  }
+
+  await db.runTransaction(async (t) => {
+    const sellOrdersRef = db.collection('sell_orders')
+    const sellOrderRef = sellOrdersRef.doc(buyOrder.data()['sell_order_id'])
+    const sellOrder = await sellOrderRef.get();
+
+    console.log('Found order:', sellOrder.data())
+
+    t.update(
+      sellOrderRef, 
+      {
+        'balance': sellOrder.data()['balance'] + buyOrder.data()['amount'], 
+      }
+    )
+
+    await buyOrderRef.set({
+      state: 'cancelled'
+    }, { merge: true });
+  });
+
+  return buy_order_id;
 }
 
 
 
-module.exports = { createBuyOrderController, commitBuyOrderController };
+module.exports = { createBuyOrderController, commitBuyOrderController, cencelBuyOrderController };
