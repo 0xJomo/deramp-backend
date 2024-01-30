@@ -8,13 +8,21 @@ async function createBuyOrder (req, res) {
     });
     return;
   }
-  const buy_order_id = await createBuyOrderController(buy_amount)
+
+  const randomCode = Math.floor(100000 + Math.random() * 900000);
+  const sixDigitCode = randomCode.toString();
+
+  const buy_order_id = await createBuyOrderController(buy_amount, sixDigitCode)
 
   if (typeof buy_order_id == 'undefined') {
-    return {}
+    return {
+      'success': false
+    }
   } else {
     return {
-      'buy_order_id': buy_order_id
+      'success': true,
+      'buy_order_id': buy_order_id,
+      'code': sixDigitCode,
     }
   }
 }
