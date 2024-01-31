@@ -3,7 +3,7 @@
 const PORT = process.env.SERVER_PORT;
 const express = require("express");
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 const functions = require("firebase-functions");
 
@@ -26,7 +26,7 @@ app.post("/api/orders/buy/create", (req, res) => {
 });
 
 app.post("/api/orders/buy/verify", (req, res) => {
-  console.log(req.body)
+  // console.log(req.body)
   verifyBuyOrder(req, res).then((response) => {
     if (response) {
       res.json(response);

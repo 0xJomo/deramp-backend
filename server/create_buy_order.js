@@ -1,6 +1,10 @@
-const {createBuyOrderController} = require('./firestore')
+const { authenticate } = require('./authentication');
+const { createBuyOrderController } = require('./firestore')
 
-async function createBuyOrder (req, res) {
+async function createBuyOrder(req, res) {
+  const user = await authenticate(req, res)
+  console.log(user.id, user.wallet.address)
+
   const buy_amount = req.body.buy_amount
   if (!buy_amount) {
     res.status(400).json({

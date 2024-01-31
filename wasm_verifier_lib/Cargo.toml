@@ -1,0 +1,55 @@
+[package]
+name = "wasm_verifier_lib"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde_json = "1.0"
+wasm-bindgen = "0.2.78"
+wasm-bindgen-futures = "0.4.37"
+js-sys = "0.3.64"
+getrandom = { version = "0.2", features = ["js"] }
+
+futures-util = "0.3.28"
+futures = "0.3"
+
+p256 = { version = "0.13", features = ["ecdsa"] }
+chrono = "0.4"
+elliptic-curve = { version = "0.13.5", features = ["pkcs8"] }
+mpz-core = { git = "https://github.com/chcharcharlie/mpz", branch="jomo" }
+
+# std::time for wasm
+# https://github.com/daxpedda/web-time/tree/main
+web-time = "0.2"
+
+tlsn-core = { git = "https://github.com/chcharcharlie/tlsn", branch="jomo-new" }
+
+[dependencies.web-sys]
+version = "0.3.22"
+features = [
+  "BinaryType",
+  "Blob",
+  "ErrorEvent",
+  "FileReader",
+  "MessageEvent",
+  "ProgressEvent",
+  "WebSocket",
+  "console",
+]
+
+[dev-dependencies]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+parking_lot_core = "=0.8.0"
+parking_lot = { version = "0.11.1", features = ["wasm-bindgen"]}
+
+[patch.crates-io.ring]
+git="https://github.com/betrusted-io/ring-xous"
+branch="0.16.20-cleanup"
+
