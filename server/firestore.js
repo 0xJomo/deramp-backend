@@ -11,7 +11,7 @@ const db = getFirestore();
 
 const uuid = require('uuid4');
 
-async function createBuyOrderController(buy_amount, code) {
+async function createBuyOrderController(buy_amount, user_id) {
   const sellOrdersRef = db.collection('sell_orders')
   var sell_order_id = 0
 
@@ -53,7 +53,7 @@ async function createBuyOrderController(buy_amount, code) {
     amount: buy_amount,
     sell_order_id: sell_order_id,
     state: 'pending',
-    code: code,
+    user_id: user_id,
   }
   await db.collection('buy_orders').doc(buy_order_id).set(buy_order);
   return buy_order_id;

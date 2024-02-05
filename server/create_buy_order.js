@@ -4,6 +4,7 @@ const { createBuyOrderController } = require('./firestore')
 async function createBuyOrder(req, res) {
   const user = await authenticate(req, res)
   console.log(user.id, user.wallet.address)
+  const user_id = user.id
 
   const buy_amount = req.body.buy_amount
   if (!buy_amount) {
@@ -13,10 +14,7 @@ async function createBuyOrder(req, res) {
     return;
   }
 
-  const randomCode = Math.floor(100000 + Math.random() * 900000);
-  const sixDigitCode = randomCode.toString();
-
-  const buy_order_id = await createBuyOrderController(buy_amount, sixDigitCode)
+  const buy_order_id = await createBuyOrderController(buy_amount, user_id)
 
   if (typeof buy_order_id == 'undefined') {
     return {
@@ -26,7 +24,6 @@ async function createBuyOrder(req, res) {
     return {
       'success': true,
       'buy_order_id': buy_order_id,
-      'code': sixDigitCode,
     }
   }
 }
