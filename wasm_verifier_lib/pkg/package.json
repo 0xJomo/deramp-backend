@@ -1,0 +1,11 @@
+{
+  "name": "wasm_verifier_lib",
+  "version": "0.1.0",
+  "files": [
+    "wasm_verifier_lib_bg.wasm",
+    "wasm_verifier_lib.js",
+    "wasm_verifier_lib.d.ts"
+  ],
+  "main": "wasm_verifier_lib.js",
+  "types": "wasm_verifier_lib.d.ts"
+}
