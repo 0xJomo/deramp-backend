@@ -1,4 +1,4 @@
-const { commitBuyOrderController } = require('./firestore')
+const { commitBuyOrderController, getBuyOrderSenderAddressController, getSellOrderReceiverAddressController } = require('./firestore')
 const { verifyProofs } = require("../wasm_verifier_lib/pkg")
 const { ethers } = require('ethers');
 const derampAbi = require('./abi.js'); 
@@ -21,17 +21,21 @@ async function verifyBuyOrder(req, res) {
   // console.log(JSON.parse(notarize_result.received))
 
   // if verfication passed
+  // get data from db
+  const [sender_address, sell_order_id] = await getBuyOrderSenderAddressController(buy_order_id)
+  const receiver_address = await getSellOrderReceiverAddressController(sell_order_id)
   // call smart contract onramp
   const contractAbi = derampAbi;
-  const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Local Address
+  const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
+  const privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
   const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
-  const wallet = new ethers.Wallet('2f947b5880d52f9198d0fcb89ca8e6d9f55029fce69fa70adcea6d5abd3abac4', provider);
+  const wallet = new ethers.Wallet(privateKey, provider);
   const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
   const functionName = 'onramp';
 
   try {
     // Call the function
-    const result = await contract[functionName](1, '0x90F79bf6EB2c4f870365E785982E1f101E93b906', '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC');
+    const result = await contract[functionName](1, receiver_address, sender_address);
 
     console.log('Function result:', result);
   } catch (error) {
@@ -46,10 +50,12 @@ async function verifyBuyOrder(req, res) {
   const result = await commitBuyOrderController(buy_order_id)
 
   if (typeof result == 'undefined') {
+    console.log('faled result:', result);
     return {
       'success': false
     }
   } else {
+    console.log('faled result:', result);
     return {
       'success': true
     }
