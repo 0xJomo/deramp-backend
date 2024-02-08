@@ -16,4 +16,13 @@ async function authenticate(req, res) {
   }
 }
 
-module.exports = { authenticate }
+async function checkToken(req, res) {
+  const user = await authenticate(req, res)
+  if (user) {
+    return {}
+  } else {
+    return
+  }
+}
+
+module.exports = { authenticate, checkToken }

@@ -13,8 +13,16 @@ app.use(cors({ origin: true }));
 
 const { createBuyOrder } = require('./create_buy_order')
 const { verifyBuyOrder } = require('./verify_buy_order')
-const { cancelBuyOrder } = require('./cancel_buy_order')
+const { cancelBuyOrder } = require('./cancel_buy_order');
+const { checkToken } = require("./authentication");
 
+app.post("/api/auth/check", (req, res) => {
+  checkToken(req, res).then((response) => {
+    if (response) {
+      res.json(response);
+    }
+  });
+});
 
 app.post("/api/orders/buy/create", (req, res) => {
   console.log(req.body)

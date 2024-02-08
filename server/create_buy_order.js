@@ -3,6 +3,9 @@ const { createBuyOrderController } = require('./firestore')
 
 async function createBuyOrder(req, res) {
   const user = await authenticate(req, res)
+  if (!user) {
+    return
+  }
   console.log(user.id, user.wallet.address)
   const user_id = user.id
 
