@@ -21,7 +21,7 @@ async function createBuyOrderController(buy_amount, user_id) {
   // This feature ensures that the transaction runs on up-to-date and consistent data.
   await db.runTransaction(async (t) => {
     // get an open order that satisfy the buy_amount
-    const sellOrders= await t.get(sellOrdersRef.where('balance', '>=', buy_amount).limit(1));
+    const sellOrders = await t.get(sellOrdersRef.where('balance', '>=', buy_amount).limit(1));
 
     if (sellOrders._size == 0) {
       console.log('No sell orders satisfy.');
@@ -33,11 +33,11 @@ async function createBuyOrderController(buy_amount, user_id) {
 
     // update the sell order, mark the state from open to pending, add a reserved amount field
     const sellOrderRef = sellOrdersRef.doc(sell_order_id)
-    console.log(sellOrder.data()['balance'])
+    const remainingBalance = BigInt(sellOrder.data()['balance']) - BigInt(buy_amount)
     t.update(
-      sellOrderRef, 
+      sellOrderRef,
       {
-        'balance': sellOrder.data()['balance'] - buy_amount, 
+        'balance': parseInt(remainingBalance.toString(), 10),
       }
     )
   });
@@ -109,11 +109,12 @@ async function cencelBuyOrderController(buy_order_id) {
     const sellOrder = await sellOrderRef.get();
 
     console.log('Found order:', sellOrder.data())
+    const newBalance = sellOrder.data()['balance'] + buyOrder.data()['amount']
 
     t.update(
-      sellOrderRef, 
+      sellOrderRef,
       {
-        'balance': sellOrder.data()['balance'] + buyOrder.data()['amount'], 
+        'balance': parseInt(newBalance.toString(), 10),
       }
     )
 
@@ -127,4 +128,4 @@ async function cencelBuyOrderController(buy_order_id) {
 
 
 
-module.exports = { createBuyOrderController, commitBuyOrderController, cencelBuyOrderController, getBuyOrderSenderAddressController, getSellOrderReceiverAddressController  };
+module.exports = { createBuyOrderController, commitBuyOrderController, cencelBuyOrderController, getBuyOrderSenderAddressController, getSellOrderReceiverAddressController };

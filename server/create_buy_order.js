@@ -17,7 +17,7 @@ async function createBuyOrder(req, res) {
     return;
   }
 
-  const buy_order_id = await createBuyOrderController(buy_amount, user_id)
+  const buy_order_id = await createBuyOrderController(BigInt(buy_amount * 1e18), user_id)
 
   if (typeof buy_order_id == 'undefined') {
     return {
