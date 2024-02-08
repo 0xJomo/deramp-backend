@@ -22,13 +22,13 @@ futures = "0.3"
 p256 = { version = "0.13", features = ["ecdsa"] }
 chrono = "0.4"
 elliptic-curve = { version = "0.13.5", features = ["pkcs8"] }
-mpz-core = { git = "https://github.com/chcharcharlie/mpz", branch="jomo" }
+# mpz-core = { git = "https://github.com/chcharcharlie/mpz", branch="jomo" }
 
 # std::time for wasm
 # https://github.com/daxpedda/web-time/tree/main
 web-time = "0.2"
 
-tlsn-core = { git = "https://github.com/chcharcharlie/tlsn", branch="jomo-new" }
+tlsn-core = { git = "https://github.com/chcharcharlie/tlsn", branch="jomo-sdk" }
 
 [dependencies.web-sys]
 version = "0.3.22"
@@ -49,7 +49,7 @@ features = [
 parking_lot_core = "=0.8.0"
 parking_lot = { version = "0.11.1", features = ["wasm-bindgen"]}
 
-[patch.crates-io.ring]
-git="https://github.com/betrusted-io/ring-xous"
-branch="0.16.20-cleanup"
+# [patch.crates-io.ring]
+# git="https://github.com/betrusted-io/ring-xous"
+# branch="0.16.20-cleanup"
 

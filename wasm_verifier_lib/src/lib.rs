@@ -38,26 +38,19 @@ pub fn verifyProofs(session_proof: &str, substrings_proof: &str, body_start: usi
     // This returns the redacted transcripts
     let (sent, recv) = substrings_proof.verify(&header).unwrap();
 
-    let sent_slices = sent.slices();
-    let recv_slices = recv.slices();
-
-    let received: Vec<String> = recv_slices
-        .iter()
-        .map(|recv_slice| String::from_utf8(recv_slice.data().to_vec()).unwrap())
+    let recv_data = recv.data();
+    let received: Vec<String> = recv
+        .authed()
+        .clone()
+        .iter_ranges()
+        .map(|recv_range| String::from_utf8(recv_data[recv_range].to_vec()).unwrap())
         .collect();
     let received_str = received[body_start..].join("\"<REDACTED>\"");
-
     let other_received: Vec<String> = received[..body_start].to_vec();
 
-    let other_sent: Vec<String> = sent_slices[1..]
-        .iter()
-        .map(|sent_slice| String::from_utf8(sent_slice.data().to_vec()).unwrap())
-        .collect();
-
     let response = serde_json::json!({
-        "sent": String::from_utf8(sent_slices[0].data().to_vec()).unwrap(),
+        "sent": String::from_utf8(sent.data().to_vec()).unwrap(),
         "received": received_str,
-        "other_sent": other_sent,
         "other_received": other_received,
     });
 

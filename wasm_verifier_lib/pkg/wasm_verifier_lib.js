@@ -40,7 +40,7 @@ const encodeString = (typeof cachedTextEncoder.encodeInto === 'function'
 
 function passStringToWasm0(arg, malloc, realloc) {
 
-    if (typeof(arg) !== 'string') throw new Error('expected a string argument');
+    if (typeof(arg) !== 'string') throw new Error(`expected a string argument, found ${typeof(arg)}`);
 
     if (realloc === undefined) {
         const buf = cachedTextEncoder.encode(arg);
@@ -72,6 +72,7 @@ function passStringToWasm0(arg, malloc, realloc) {
         const ret = encodeString(arg, view);
         if (ret.read !== arg.length) throw new Error('failed to pass whole string');
         offset += ret.written;
+        ptr = realloc(ptr, len, offset, 1) >>> 0;
     }
 
     WASM_VECTOR_LEN = offset;
@@ -79,7 +80,7 @@ function passStringToWasm0(arg, malloc, realloc) {
 }
 
 function _assertNum(n) {
-    if (typeof(n) !== 'number') throw new Error('expected a number argument');
+    if (typeof(n) !== 'number') throw new Error(`expected a number argument, found ${typeof(n)}`);
 }
 
 let cachedInt32Memory0 = null;
