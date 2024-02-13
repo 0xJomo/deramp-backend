@@ -21,7 +21,7 @@ async function createBuyOrderController(buy_amount, user_id) {
   // This feature ensures that the transaction runs on up-to-date and consistent data.
   await db.runTransaction(async (t) => {
     // get an open order that satisfy the buy_amount
-    const sellOrders = await t.get(sellOrdersRef.where('balance', '>=', buy_amount).limit(1));
+    const sellOrders = await t.get(sellOrdersRef.where('balance', '>=', parseInt(buy_amount.toString(), 10)).limit(1));
 
     if (sellOrders._size == 0) {
       console.log('No sell orders satisfy.');
@@ -50,7 +50,7 @@ async function createBuyOrderController(buy_amount, user_id) {
   // create buy order entry
   const buy_order_id = uuid(4).toString();
   const buy_order = {
-    amount: buy_amount,
+    amount: parseInt(buy_amount.toString(), 10),
     sell_order_id: sell_order_id,
     state: 'pending',
     user_id: user_id,
@@ -109,7 +109,7 @@ async function cencelBuyOrderController(buy_order_id) {
     const sellOrder = await sellOrderRef.get();
 
     console.log('Found order:', sellOrder.data())
-    const newBalance = sellOrder.data()['balance'] + buyOrder.data()['amount']
+    const newBalance = BigInt(sellOrder.data()['balance']) + BigInt(buyOrder.data()['amount'])
 
     t.update(
       sellOrderRef,
