@@ -33,11 +33,9 @@ async function verifyBuyOrder(req, res) {
   const seller_address = await getSellOrderReceiverAddressController(sell_order_id)
   // call smart contract onramp
   const contractAbi = derampAbi;
-  const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
-  const privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-  const provider = new ethers.providers.JsonRpcProvider("https://jomonode.ngrok.dev");
-  const wallet = new ethers.Wallet(privateKey, provider);
-  const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
+  const provider = new ethers.providers.JsonRpcProvider(process.env.ETH_NODE_URI);
+  const wallet = new ethers.Wallet(process.env.CONTRACT_OWNER_PRIVATE_KEY, provider);
+  const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, contractAbi, wallet);
   const functionName = 'onramp';
 
   try {
