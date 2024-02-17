@@ -17,3 +17,5 @@ yarn-debug.log*
 yarn-error.log*
 
 wasm_verifier_lib/target
+
+firebase_admin.json
