@@ -1,4 +1,4 @@
-const { commitBuyOrderController, getBuyOrderSenderAddressController, getSellOrderReceiverAddressController } = require('./firestore')
+const { commitBuyOrderController, getBuyOrderSenderAddressController, getSellOrderData } = require('./firestore')
 const { verifyProofs } = require("../wasm_verifier_lib/pkg")
 const { ethers } = require('ethers');
 const derampAbi = require('./abi.js');
@@ -30,12 +30,35 @@ async function verifyBuyOrder(req, res) {
   // if verfication passed
   // get data from db
   const [sender_address, sell_order_id] = await getBuyOrderSenderAddressController(buy_order_id)
-  const seller_address = await getSellOrderReceiverAddressController(sell_order_id)
+  const sell_order_data = await getSellOrderData(sell_order_id)
+  const seller_address = sell_order_data["receiver_address"]
+  const chain_name = sell_order_data["chain"]
+
+  const nodeUri = {
+    "Sepolia": process.env.ETH_NODE_URI_SEPOLIA,
+    "BlastSepolia": process.env.ETH_NODE_URI_BLAST_SEPOLIA,
+  }[chain_name]
+  const ownerPrivateKey = {
+    "Sepolia": process.env.CONTRACT_OWNER_PRIVATE_KEY_SEPOLIA,
+    "BlastSepolia": process.env.CONTRACT_OWNER_PRIVATE_KEY_BLAST_SEPOLIA,
+  }[chain_name]
+  const contractAddress = {
+    "Sepolia": process.env.CONTRACT_ADDRESS_SEPOLIA,
+    "BlastSepolia": process.env.CONTRACT_ADDRESS_BLAST_SEPOLIA,
+  }[chain_name]
+
+  if (!nodeUri) {
+    res.status(400).json({
+      "message": 'Unsupported chain'
+    });
+    return;
+  }
+
   // call smart contract onramp
   const contractAbi = derampAbi;
-  const provider = new ethers.providers.JsonRpcProvider(process.env.ETH_NODE_URI);
-  const wallet = new ethers.Wallet(process.env.CONTRACT_OWNER_PRIVATE_KEY, provider);
-  const contract = new ethers.Contract(process.env.CONTRACT_ADDRESS, contractAbi, wallet);
+  const provider = new ethers.providers.JsonRpcProvider(nodeUri);
+  const wallet = new ethers.Wallet(ownerPrivateKey, provider);
+  const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
   const functionName = 'onramp';
 
   try {

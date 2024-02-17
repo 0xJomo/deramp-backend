@@ -76,12 +76,12 @@ async function getBuyOrderSenderAddressController(buy_order_id) {
   return [buyOrder.data()['sender_address'], buyOrder.data()['sell_order_id']]
 }
 
-async function getSellOrderReceiverAddressController(sell_order_id) {
+async function getSellOrderData(sell_order_id) {
   const sellOrdersRef = db.collection('sell_orders')
   const sellOrderRef = await sellOrdersRef.doc(sell_order_id)
   const sellOrder = await sellOrderRef.get()
 
-  return sellOrder.data()['receiver_address']
+  return sellOrder.data()
 }
 
 async function commitBuyOrderController(buy_order_id) {
@@ -137,4 +137,4 @@ async function cencelBuyOrderController(buy_order_id) {
 
 
 
-module.exports = { createBuyOrderController, commitBuyOrderController, cencelBuyOrderController, getBuyOrderSenderAddressController, getSellOrderReceiverAddressController };
+module.exports = { createBuyOrderController, commitBuyOrderController, cencelBuyOrderController, getBuyOrderSenderAddressController, getSellOrderData };
