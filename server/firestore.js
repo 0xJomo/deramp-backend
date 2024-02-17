@@ -11,9 +11,10 @@ const db = getFirestore();
 
 const uuid = require('uuid4');
 
-async function createBuyOrderController(buy_amount, user_id) {
+async function createBuyOrderController(buy_amount, user_id, p2p_platform, chain) {
   const sellOrdersRef = db.collection('sell_orders')
   var sell_order_id = 0
+  var sell_order_recipient = ""
 
   // In the case of a concurrent edit, Cloud Firestore runs the entire transaction again. 
   // For example, if a transaction reads documents and another client modifies any of those documents, 
@@ -21,7 +22,11 @@ async function createBuyOrderController(buy_amount, user_id) {
   // This feature ensures that the transaction runs on up-to-date and consistent data.
   await db.runTransaction(async (t) => {
     // get an open order that satisfy the buy_amount
-    const sellOrders = await t.get(sellOrdersRef.where('balance', '>=', parseInt(buy_amount.toString(), 10)).limit(1));
+    const sellOrders = await t.get(sellOrdersRef
+      .where('balance', '>=', parseInt(buy_amount.toString(), 10))
+      .where('payment_platform', '==', p2p_platform)
+      .where('chain', '==', chain)
+      .limit(1));
 
     if (sellOrders._size == 0) {
       console.log('No sell orders satisfy.');
@@ -29,6 +34,7 @@ async function createBuyOrderController(buy_amount, user_id) {
     }
     const sellOrder = sellOrders.docs[0]
     sell_order_id = sellOrder.id
+    sell_order_recipient = sellOrder.data()["payment_id"]
     console.log('Found order:', sellOrder.data())
 
     // update the sell order, mark the state from open to pending, add a reserved amount field
@@ -56,7 +62,10 @@ async function createBuyOrderController(buy_amount, user_id) {
     user_id: user_id,
   }
   await db.collection('buy_orders').doc(buy_order_id).set(buy_order);
-  return buy_order_id;
+  return {
+    buy_order_id: buy_order_id,
+    recipient_id: sell_order_recipient,
+  };
 }
 
 async function getBuyOrderSenderAddressController(buy_order_id) {
