@@ -51,7 +51,7 @@ async function verifyBuyOrder(req, res) {
   // 3. order not already completed
   if (buy_order_data.state === "completed") {
     return {
-      success: "false",
+      success: false,
       reason: "This order has already been fulfilled",
     }
   }
@@ -59,7 +59,7 @@ async function verifyBuyOrder(req, res) {
   // 4. user id matches with logged in user
   if (user_id !== buy_order_data.user_id) {
     return {
-      success: "false",
+      success: false,
       reason: "Order not under current account",
     }
   }
@@ -80,7 +80,7 @@ async function verifyBuyOrder(req, res) {
 
   if (!recipient_match) {
     return {
-      success: "false",
+      success: false,
       reason: "Recipient mismatch",
     }
   }
@@ -90,7 +90,7 @@ async function verifyBuyOrder(req, res) {
   const lookupRes = await getData('used_transaction_id/' + transaction_id)
   if (lookupRes) {
     return {
-      success: "false",
+      success: false,
       reason: "Duplicate transaction",
     }
   } else {
@@ -104,7 +104,7 @@ async function verifyBuyOrder(req, res) {
   // 9. notarized state is "COMPLETED"
   if (notarized_json[0].currency !== "USD" || notarized_json[0].category !== "transfers" || notarized_json[0].state !== "COMPLETED") {
     return {
-      success: "false",
+      success: false,
       reason: "Wrong transaction metadata",
     }
   }
