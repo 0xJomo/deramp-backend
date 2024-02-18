@@ -1,10 +1,12 @@
 // server/firebase.js
 
-const admin = require('firebase-admin');
-var serviceAccount = require('../firebase_admin.json');
-const app = admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-})
+// const admin = require('firebase-admin');
+// var serviceAccount = require('../firebase_admin.json');
+// const app = admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount)
+// })
+
+const { app } = require('./firestore.js')
 
 const DATABASE_URL = `https://${process.env.PROJECT_ID}-${process.env.RUNTIME_ENV == "dev" ? "default-rtdb" : process.env.RUNTIME_ENV}.firebaseio.com`
 const DATABASE_PATH = `${process.env.TEST_ENV_NAME == "" ? "/" : process.env.TEST_ENV_NAME + "/"}`
