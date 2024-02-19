@@ -93,10 +93,6 @@ async function verifyBuyOrder(req, res) {
       success: false,
       reason: "Duplicate transaction",
     }
-  } else {
-    setData('used_transaction_id/' + transaction_id, {
-      "used": true
-    })
   }
 
   // 7. notarized currency is USD
@@ -110,25 +106,6 @@ async function verifyBuyOrder(req, res) {
   }
 
   // 10. TODO notarized complete date later than order creation date
-
-  // Write complete notarized data into db to archive
-  setData('completed_orders/' + buy_order_id, {
-    timestamp: Date.now(),
-    transfer_amount: transfer_amount,
-    fee: fee,
-    notarized_data: {
-      id: transaction_id,
-      currency: notarized_json[0].currency,
-      category: notarized_json[0].category,
-      state: notarized_json[0].state,
-      amount: notarized_json[0].amount,
-      account: notarized_json[0].account,
-      recipient: {
-        id: notarized_json[0].recipient.id,
-        code: notarized_json[0].recipient.code,
-      }
-    }
-  })
 
   // Get the correct node settings to prepare for contract interaction
   const nodeUri = {
@@ -172,6 +149,27 @@ async function verifyBuyOrder(req, res) {
     }
   }
 
+  // Write complete notarized data into db to archive
+  setData('completed_orders/' + buy_order_id, {
+    timestamp: Date.now(),
+    transfer_amount: transfer_amount,
+    fee: fee,
+    notarized_data: {
+      id: transaction_id,
+      currency: notarized_json[0].currency,
+      category: notarized_json[0].category,
+      state: notarized_json[0].state,
+      amount: notarized_json[0].amount,
+      account: notarized_json[0].account,
+      recipient: {
+        id: notarized_json[0].recipient.id,
+        code: notarized_json[0].recipient.code,
+      }
+    }
+  })
+  setData('used_transaction_id/' + transaction_id, {
+    "used": true
+  })
 
   // mark the buy order state from pending to complete
   const result = await commitBuyOrderController(buy_order_id)
