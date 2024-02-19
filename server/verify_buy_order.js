@@ -68,12 +68,12 @@ async function verifyBuyOrder(req, res) {
   var recipient_match = true
   const platform = sell_order_data.payment_platform
   if (platform === "revolut") {
-    const sender_account_id = notarized_json[0].account.id
+    const sender_account_id = notarized_json[0].account?.id
     const expected_sent = `GET https://app.revolut.com/api/retail/user/current/transactions/last?count=1&internalPocketId=${sender_account_id}`
     if (!notarize_result.sent.startsWith(expected_sent)) {
       recipient_match = false
     }
-    if (notarized_json[0].recipient.code !== sell_order_data.payment_id) {
+    if (notarized_json[0].recipient?.code !== sell_order_data.payment_id) {
       recipient_match = false
     }
   }
