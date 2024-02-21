@@ -37,6 +37,7 @@ async function verifyBuyOrder(req, res) {
   const sell_order_data = await getSellOrderData(sell_order_id)
   const seller_address = sell_order_data["receiver_address"]
   const chain_name = sell_order_data["chain"]
+  const platform = sell_order_data["payment_platform"]
 
   var transfer_amount = parseFloat(buy_order_data["amount"] / 1e18)
 
@@ -45,8 +46,20 @@ async function verifyBuyOrder(req, res) {
   transfer_amount = Math.min(transfer_amount, amount)
 
   // 2. amount matches or smaller than notarized amount
-  const notarized_amount = parseFloat((0 - notarized_json[0].amount) / 100.00)
-  transfer_amount = Math.min(transfer_amount, notarized_amount)
+  if (platform === "revolut") {
+    const notarized_amount = parseFloat((0 - notarized_json[0].amount) / 100.00)
+    transfer_amount = Math.min(transfer_amount, notarized_amount)
+  }
+  if (platform === "venmo") {
+    const notarized_amount = notarized_json.stories[0].amount
+    if (!notarized_amount.startsWith("- $")) {
+      return {
+        success: false,
+        reason: "Transfer amount mismatch",
+      }
+    }
+    transfer_amount = Math.min(transfer_amount, parseFloat(notarized_amount.substring(3)))
+  }
 
   // 3. order not already completed
   if (buy_order_data.state === "completed") {
@@ -66,7 +79,6 @@ async function verifyBuyOrder(req, res) {
 
   // 5. notarized platform and recipient matches with sell order
   var recipient_match = true
-  const platform = sell_order_data.payment_platform
   if (platform === "revolut") {
     const sender_account_id = notarized_json[0].account?.id
     const expected_sent = `GET https://app.revolut.com/api/retail/user/current/transactions/last?count=1&internalPocketId=${sender_account_id}`
@@ -74,6 +86,17 @@ async function verifyBuyOrder(req, res) {
       recipient_match = false
     }
     if (notarized_json[0].recipient?.code !== sell_order_data.payment_id) {
+      recipient_match = false
+    }
+  }
+  if (platform === "venmo") {
+    const sender_account_id = notarized_json.stories[0].title.sender.id
+    const receiver_account_id = notarized_json.stories[0].title.receiver.id
+    const expected_sent = `GET https://account.venmo.com/api/stories?feedType=betweenYou&otherUserId=${receiver_account_id}&externalId=${sender_account_id}`
+    if (!notarize_result.sent.startsWith(expected_sent)) {
+      recipient_match = false
+    }
+    if (notarized_json.stories[0].title.receiver.username !== sell_order_data.payment_id) {
       recipient_match = false
     }
   }
@@ -86,8 +109,10 @@ async function verifyBuyOrder(req, res) {
   }
 
   // 6. notarized transaction id is unique
-  const transaction_id = notarized_json[0].id
-  const lookupRes = await getData('used_transaction_id/' + transaction_id)
+  var transaction_id = ""
+  if (platform === "revolut") transaction_id = notarized_json[0].id
+  if (platform === "venmo") transaction_id = notarized_json.stories[0].id
+  const lookupRes = await getData(`used_transaction_id/${platform}/${transaction_id}`)
   if (lookupRes) {
     return {
       success: false,
@@ -98,10 +123,12 @@ async function verifyBuyOrder(req, res) {
   // 7. notarized currency is USD
   // 8. notarized category is "transfers"
   // 9. notarized state is "COMPLETED"
-  if (notarized_json[0].currency !== "USD" || notarized_json[0].category !== "transfers" || notarized_json[0].state !== "COMPLETED") {
-    return {
-      success: false,
-      reason: "Wrong transaction metadata",
+  if (platform === "revolut") {
+    if (notarized_json[0].currency !== "USD" || notarized_json[0].category !== "transfers" || notarized_json[0].state !== "COMPLETED") {
+      return {
+        success: false,
+        reason: "Wrong transaction metadata",
+      }
     }
   }
 
@@ -134,11 +161,10 @@ async function verifyBuyOrder(req, res) {
   const wallet = new ethers.Wallet(ownerPrivateKey, provider);
   const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
   const functionName = 'onramp';
-  transfer_amount = BigInt(transfer_amount * 1e18)
 
   try {
     // Call the function
-    const result = await contract[functionName](transfer_amount, seller_address, receiver_address);
+    const result = await contract[functionName](BigInt(transfer_amount * 1e18), seller_address, receiver_address);
 
     console.log('Function result:', result);
   } catch (error) {
@@ -150,24 +176,42 @@ async function verifyBuyOrder(req, res) {
   }
 
   // Write complete notarized data into db to archive
-  setData('completed_orders/' + buy_order_id, {
-    timestamp: Date.now(),
-    transfer_amount: transfer_amount,
-    fee: fee,
-    notarized_data: {
-      id: transaction_id,
-      currency: notarized_json[0].currency,
-      category: notarized_json[0].category,
-      state: notarized_json[0].state,
-      amount: notarized_json[0].amount,
-      account: notarized_json[0].account,
-      recipient: {
-        id: notarized_json[0].recipient.id,
-        code: notarized_json[0].recipient.code,
+  if (platform === "revolut") {
+    setData('completed_orders/' + buy_order_id, {
+      timestamp: Date.now(),
+      transfer_amount: transfer_amount,
+      payment_platform: platform,
+      fee: fee,
+      notarized_data: {
+        id: transaction_id,
+        currency: notarized_json[0].currency,
+        category: notarized_json[0].category,
+        state: notarized_json[0].state,
+        amount: notarized_json[0].amount,
+        account: notarized_json[0].account,
+        recipient: {
+          id: notarized_json[0].recipient.id,
+          code: notarized_json[0].recipient.code,
+        }
       }
-    }
-  })
-  setData('used_transaction_id/' + transaction_id, {
+    })
+  }
+  if (platform === "venmo") {
+    setData('completed_orders/' + buy_order_id, {
+      timestamp: Date.now(),
+      transfer_amount: transfer_amount,
+      payment_platform: platform,
+      fee: fee,
+      notarized_data: {
+        id: transaction_id,
+        amount: notarized_json.stories[0].amount,
+        date: notarized_json.stories[0].date,
+        type: notarized_json.stories[0].type,
+        title: notarized_json.stories[0].title,
+      }
+    })
+  }
+  setData(`used_transaction_id/${platform}/${transaction_id}`, {
     "used": true
   })
 
