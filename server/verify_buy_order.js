@@ -39,7 +39,7 @@ async function verifyBuyOrder(req, res) {
   const chain_name = sell_order_data["chain"]
   const platform = sell_order_data["payment_platform"]
 
-  var transfer_amount = parseFloat(buy_order_data["amount"] / 1e18)
+  var transfer_amount = parseFloat(buy_order_data["amount"] / 1e6)
 
   // Verify the everything with the order matches
   // 1. amount matches or smaller than buy order amount
@@ -167,7 +167,7 @@ async function verifyBuyOrder(req, res) {
 
   try {
     // Call the function
-    const result = await contract[functionName](BigInt(transfer_amount * 1e18), seller_address, receiver_address);
+    const result = await contract[functionName](BigInt(transfer_amount * 1e6), seller_address, receiver_address);
 
     console.log('Function result:', result);
   } catch (error) {

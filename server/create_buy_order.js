@@ -19,7 +19,7 @@ async function createBuyOrder(req, res) {
     return;
   }
 
-  const buy_order_info = await createBuyOrderController(BigInt(buy_amount * 1e18), user_id, p2p_platform, chain)
+  const buy_order_info = await createBuyOrderController(BigInt(buy_amount * 1e6), user_id, p2p_platform, chain)
 
   if (typeof buy_order_info == 'undefined') {
     return {
