@@ -138,14 +138,17 @@ async function verifyBuyOrder(req, res) {
   const nodeUri = {
     "Sepolia": process.env.ETH_NODE_URI_SEPOLIA,
     "BlastSepolia": process.env.ETH_NODE_URI_BLAST_SEPOLIA,
+    "Arbitrum": process.env.ETH_NODE_URI_ARBITRUM,
   }[chain_name]
   const ownerPrivateKey = {
     "Sepolia": process.env.CONTRACT_OWNER_PRIVATE_KEY_SEPOLIA,
     "BlastSepolia": process.env.CONTRACT_OWNER_PRIVATE_KEY_BLAST_SEPOLIA,
+    "Arbitrum": process.env.CONTRACT_OWNER_PRIVATE_KEY_ARBITRUM,
   }[chain_name]
   const contractAddress = {
     "Sepolia": process.env.CONTRACT_ADDRESS_SEPOLIA,
     "BlastSepolia": process.env.CONTRACT_ADDRESS_BLAST_SEPOLIA,
+    "Arbitrum": process.env.CONTRACT_ADDRESS_ARBITRUM,
   }[chain_name]
 
   if (!nodeUri) {
